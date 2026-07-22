@@ -41,7 +41,15 @@ if (!$partner) {
 // ---- Validate required payment fields ---------------------------------
 
 $amount = isset($_POST['amount']) ? (float) $_POST['amount'] : 0;
-$currency = trim($_POST['currency'] ?? 'BDT') ?: 'BDT';
+
+// BDT only for now — this SSLCommerz account isn't confirmed provisioned
+// for other currencies, so reject anything else outright rather than let
+// a partner silently hit a broken gateway session.
+$currency = strtoupper(trim($_POST['currency'] ?? 'BDT')) ?: 'BDT';
+if ($currency !== 'BDT') {
+    fail($responseType, 400, 'Only BDT is supported at this time');
+}
+
 $custName = trim($_POST['cus_name'] ?? '');
 $custEmail = trim($_POST['cus_email'] ?? '');
 $custPhone = trim($_POST['cus_phone'] ?? '');

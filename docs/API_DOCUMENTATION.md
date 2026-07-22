@@ -142,3 +142,13 @@ minor extra layer, not the actual security boundary (the login is).
   you.
 - Consider adding a `panel_admins` password-reset flow if more than one
   admin will ever use this.
+- **BDT only, by design.** `payment_proceed.php` rejects any `currency`
+  other than `BDT` with a `400` — this SSLCommerz account was never
+  confirmed provisioned for other currencies, so a partner passing `USD`
+  would otherwise hit a broken/unpredictable gateway session. If
+  international payments are ever needed, first confirm with SSLCommerz
+  that the account supports non-BDT currency, then revisit the hardcoded
+  `cus_country`/`ship_country` = `"Bangladesh"` in the Session API payload
+  (see the note above) — a genuinely international customer shouldn't be
+  tagged as Bangladeshi. Until then, don't just relax the currency check
+  without also fixing that.

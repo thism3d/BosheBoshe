@@ -43,7 +43,7 @@ gets redirected straight through to the SSLCommerz payment page:
 |---|---|---|
 | `api_key` | yes | Given to you by BosheBoshe |
 | `amount` | yes | Numeric, e.g. `1250.00` |
-| `currency` | no | Default `BDT` |
+| `currency` | no | **`BDT` only** — this account isn't provisioned for other currencies yet, so anything else is rejected with a `400`. Omit it or send `BDT` explicitly |
 | `order_ref` | no | Your own order/invoice ID — echoed back to you on every callback and query |
 | `cus_name`, `cus_email`, `cus_phone`, `cus_add1`, `cus_city` | yes | Customer details required by SSLCommerz |
 | `success_url`, `fail_url`, `cancel_url` | yes | **Your own pages.** BosheBoshe redirects the customer's browser here once the payment finishes — see §2 |
