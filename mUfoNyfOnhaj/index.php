@@ -49,7 +49,7 @@ require __DIR__ . '/inc/layout_top.php';
     <p><label>Password<br><input type="password" name="password" required style="width:100%;"></label></p>
     <button type="submit">Log in</button>
   </form>
-  <p class="muted" style="margin-top:16px;">First time here? <a href="setup.php">Run setup</a>.</p>
+  <!-- <p class="muted" style="margin-top:16px;">First time here? <a href="setup.php">Run setup</a>.</p> -->
 </div>
 
 <?php require __DIR__ . '/inc/layout_bottom.php'; ?>
