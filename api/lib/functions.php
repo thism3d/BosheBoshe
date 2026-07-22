@@ -17,14 +17,15 @@ function api_json_response(int $httpCode, array $payload): void
 }
 
 /**
- * Generate a unique bosheboshe-side transaction id.
- * Format: BB-API-<partner_shortcode>-<timestamp><random>
+ * Generate a unique bosheboshe-side transaction id, in the same
+ * BOSHEBOSHE_TRID_* style the native checkout already sends to
+ * SSLCommerz (see sslpayment.php) — no partner name, no "API" marker,
+ * nothing that would let SSLCommerz distinguish this from an ordinary
+ * bosheboshe.com order.
  */
-function api_generate_tran_id(string $partnerShortcode): string
+function api_generate_tran_id(): string
 {
-    $partnerShortcode = preg_replace('/[^A-Za-z0-9]/', '', $partnerShortcode);
-    $partnerShortcode = strtoupper(substr($partnerShortcode, 0, 12));
-    return 'BB-API-' . $partnerShortcode . '-' . time() . '-' . strtoupper(bin2hex(random_bytes(4)));
+    return 'BOSHEBOSHE_TRID_' . time() . strtoupper(bin2hex(random_bytes(3)));
 }
 
 function api_generate_key(string $prefix, int $bytes = 24): string

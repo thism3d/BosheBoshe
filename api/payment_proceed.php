@@ -47,15 +47,12 @@ $custEmail = trim($_POST['cus_email'] ?? '');
 $custPhone = trim($_POST['cus_phone'] ?? '');
 $custAddress = trim($_POST['cus_add1'] ?? '');
 $custCity = trim($_POST['cus_city'] ?? '');
-$custPostcode = trim($_POST['cus_postcode'] ?? '1000');
 $successUrl = trim($_POST['success_url'] ?? '');
 $failUrl = trim($_POST['fail_url'] ?? '');
 $cancelUrl = trim($_POST['cancel_url'] ?? '');
 $ipnUrl = trim($_POST['ipn_url'] ?? '');
 $orderRef = trim($_POST['order_ref'] ?? '');
 $emiOption = (isset($_POST['emi_option']) && $_POST['emi_option'] == '1') ? '1' : '0';
-$productCategory = trim($_POST['product_category'] ?? 'general');
-$productName = trim($_POST['product_name'] ?? 'Order');
 
 $missing = [];
 if ($amount <= 0) $missing[] = 'amount';
@@ -74,7 +71,7 @@ if (!empty($missing)) {
 
 // ---- Create our own transaction record --------------------------------
 
-$tranId = api_generate_tran_id($partner['partner_name']);
+$tranId = api_generate_tran_id();
 
 $stmt = $conn->prepare('INSERT INTO api_transactions
     (partner_id, tran_id, partner_order_ref, amount, currency, status,
@@ -108,6 +105,17 @@ if (!$stmt->execute()) {
 $stmt->close();
 
 // ---- Call the SSLCommerz Session API -----------------------------------
+//
+// This payload is deliberately built to look identical to the one the
+// site's own checkout sends (see sslpayment.php) — same field set, same
+// "bosheboshe" shipping identity, no partner-identifying data anywhere.
+// SSLCommerz should not be able to tell a partner-brokered payment apart
+// from a native bosheboshe.com purchase; the only thing that varies is
+// which merchant-chosen tran_id and success/fail/cancel/ipn URLs we send,
+// and those already point at our own domain either way. Which partner
+// (and their order_ref) originated a given tran_id lives only in our own
+// api_transactions table, looked up after the fact — never sent to
+// SSLCommerz.
 
 $post_data = [
     'store_id' => SSLCOMMERZ_STORE_ID,
@@ -120,21 +128,19 @@ $post_data = [
     'cancel_url' => API_CANCEL_URL,
     'ipn_url' => API_IPN_URL,
     'emi_option' => $emiOption,
-    'product_category' => $productCategory,
-    'product_name' => $productName,
-    'product_profile' => 'general',
     'cus_name' => $custName,
     'cus_email' => $custEmail,
     'cus_add1' => $custAddress,
     'cus_city' => $custCity,
-    'cus_postcode' => $custPostcode,
     'cus_country' => 'Bangladesh',
     'cus_phone' => $custPhone,
-    'shipping_method' => 'NO',
-    'num_of_item' => 1,
+    'ship_name' => 'bosheboshe',
+    'ship_add1' => 'Dinajpur',
+    'ship_city' => 'Dinajpur',
+    'ship_postcode' => '5200',
+    'ship_country' => 'Bangladesh',
     'value_a' => $tranId,
-    'value_b' => $orderRef,
-    'value_c' => (string) $partner['id'],
+    'product_amount' => $amount,
 ];
 
 $result = api_curl_post(SSLCZ_SESSION_API, $post_data);

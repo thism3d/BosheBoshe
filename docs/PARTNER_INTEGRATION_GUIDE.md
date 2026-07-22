@@ -46,15 +46,23 @@ gets redirected straight through to the SSLCommerz payment page:
 | `currency` | no | Default `BDT` |
 | `order_ref` | no | Your own order/invoice ID — echoed back to you on every callback and query |
 | `cus_name`, `cus_email`, `cus_phone`, `cus_add1`, `cus_city` | yes | Customer details required by SSLCommerz |
-| `cus_postcode` | no | Default `1000` |
 | `success_url`, `fail_url`, `cancel_url` | yes | **Your own pages.** BosheBoshe redirects the customer's browser here once the payment finishes — see §2 |
 | `ipn_url` | no | Your server-to-server webhook — see §3 |
 | `emi_option` | no | `1` to allow EMI (BosheBoshe's merchant account has EMI enabled), default `0` |
-| `product_category`, `product_name` | no | Free text, defaults to `general` / `Order` |
 | `response_type` | no | Omit for the redirect flow above. Set to `json` if you're calling this from your own backend instead of a browser form — you'll get back `{"status":"success","tran_id":"...","GatewayPageURL":"..."}` and should redirect your customer to `GatewayPageURL` yourself |
 
 On validation failure you get back `400`/`401`/`502` with
 `{"status":"error","message":"..."}`.
+
+**Note on what SSLCommerz actually sees:** BosheBoshe is the merchant of
+record on every transaction, so the session request sent to SSLCommerz is
+always shaped exactly like BosheBoshe's own native checkout — same
+"bosheboshe" shipping identity, same field set, same `BOSHEBOSHE_TRID_...`
+transaction ID style. Your site name, `order_ref`, and any product details
+are never sent to SSLCommerz; they only exist in BosheBoshe's own records,
+keyed by `tran_id`. There's no `product_category`/`product_name`/
+`cus_postcode` field on this endpoint — BosheBoshe doesn't forward those to
+SSLCommerz, so passing them has no effect.
 
 ## 2. Getting the result back
 
@@ -63,7 +71,7 @@ Once the customer finishes at SSLCommerz, their browser is redirected to
 with query parameters appended:
 
 ```
-https://yoursite.com/payment/success?tran_id=BB-API-...&order_ref=YOUR-ORDER-1234&status=VALID&amount=1250.00&currency=BDT&val_id=...&bank_tran_id=...&card_type=...&timestamp=1753...&signature=...
+https://yoursite.com/payment/success?tran_id=BOSHEBOSHE_TRID_...&order_ref=YOUR-ORDER-1234&status=VALID&amount=1250.00&currency=BDT&val_id=...&bank_tran_id=...&card_type=...&timestamp=1753...&signature=...
 ```
 
 **Always verify `signature` before trusting this data** — a customer could
@@ -100,7 +108,7 @@ paid"; the browser redirect is just a nice UX shortcut.
 
 ```
 api_key=YOUR_API_KEY
-tran_id=BB-API-...      (or order_ref=YOUR-ORDER-1234)
+tran_id=BOSHEBOSHE_TRID_...      (or order_ref=YOUR-ORDER-1234)
 live=1                  (optional — also re-checks SSLCommerz directly, slower)
 ```
 
@@ -117,7 +125,7 @@ since they move money.
 ```
 api_key=YOUR_API_KEY
 api_secret=YOUR_API_SECRET
-tran_id=BB-API-...
+tran_id=BOSHEBOSHE_TRID_...
 refund_amount=500.00
 refund_remarks=Customer requested partial refund
 ```

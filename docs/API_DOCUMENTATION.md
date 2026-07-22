@@ -34,6 +34,22 @@ checkout (`payment_proceed.php` / `sslpayment.php` at the repo root, which
 are unrelated and were **not** touched — those power BosheBoshe's own cart
 checkout and the naming collision is coincidental).
 
+**SSLCommerz never sees which layer a transaction came from.** The
+Session API payload built in `api/payment_proceed.php` is deliberately
+shaped to be indistinguishable from the one `sslpayment.php` sends for a
+native purchase: same field set, `ship_name`/`ship_add1`/`ship_city` fixed
+to bosheboshe's own address (never the partner's), `cus_country`
+hardcoded, and `tran_id` generated in the same `BOSHEBOSHE_TRID_<unique>`
+style — no `BB-API-`, no partner name, nothing that reads as
+aggregator/reseller traffic. There is no `product_category`,
+`product_name`, or `cus_postcode` field sent at all (the native flow
+doesn't send them either), and no `value_b`/`value_c` metadata — SSLCommerz
+gets exactly one merchant-chosen reference (`tran_id`, echoed in
+`value_a`) and nothing else. All partner/order-ref bookkeeping happens
+only in `api_transactions`, looked up locally by `tran_id` after the fact.
+If this payload is ever changed, keep it byte-for-byte aligned with
+`sslpayment.php`'s `$post_data` — that's the whole point.
+
 ## Database (additive only — see `api/sql/schema.sql`)
 
 - **`api_partners`** — one row per partner website. `api_key` is what they
