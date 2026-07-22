@@ -1,0 +1,677 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+
+
+/* Code for iPhone */
+textarea,
+input,
+input.text,
+input[type="text"],
+input[type="button"],
+input[type="submit"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+.input-checkbox {
+-webkit-appearance: none;
+border-radius: 0;
+    outline: none;
+}
+
+::-webkit-scrollbar {
+  width: 1px;
+  background-color: rgba(0,0,0,0);
+    /*display: hidden;*/
+}
+
+
+body{
+    margin: 0;
+    padding: 0;
+}
+
+p{
+    margin: 0;
+    padding: 0;
+}
+
+
+
+a{
+  text-decoration: none;
+    color: blue;
+    font-family: 'Roboto', sans-serif;
+}
+
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* merchant/index */
+
+#merchant_login_container a{
+    font-size: 15px;
+}
+
+
+#merchant_login_container{
+    position: fixed;
+    width: 100%;
+    height: 90%;
+    top: 10%;
+    overflow-y: scroll;
+}
+
+#merchant_login_main{
+    background-color: rgba(227, 227, 227, 0.7);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+    margin-top: 20px;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+#merchant_login_img{
+    width: 100%;
+    max-width: 180px;
+}
+
+
+#new_merchant_p{
+    margin: 20px 0;
+}
+
+#new_merchant_p button {
+    /* text-decoration: underline; */
+    /* background-color: aliceblue; */
+    background-color: #65378f;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    padding: 6px 18px;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    outline: none;
+    cursor: pointer;
+}
+
+#new_merchant_p button:hover{
+    background-color: #874dbd;
+}
+
+#already_registered_merchant_span{
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    color: red;
+}
+
+#merchant_login_h2{
+    font-weight: normal;
+    font-size: 22px;
+    margin: 0;
+    padding: 6px 6px 6px 6px;
+    font-family: 'Roboto', sans-serif;
+    background-color: rgba(255, 48, 145, 0.9);
+    color: white;
+}
+
+#mlogin_form_holder{
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+
+form{
+    width: 100%;
+}
+
+form input{
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 2px solid #d1d1d1;
+}
+
+
+form input:focus{
+    border-color: #737373;
+}
+
+form button{    
+    border: none;
+    padding: 7px 40px;
+    outline: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    background-color: #65378f;
+    color: white;
+    cursor: pointer;
+}
+
+form button:hover{
+    background-color: #874dbd;
+}
+
+#left_of_mlogins{
+    width: 60%;
+    float: left;
+    text-align: left;
+    margin-top: 7px;
+}
+
+#right_of_mlogins{
+    width: 40%;
+    float: right;
+    text-align: right
+}
+
+
+#loading_system{
+    display: none;
+    top: 30%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    border: 14px solid #e0e0e0;
+    border-radius: 50%;
+    border-top: 14px solid #fe4198;
+    border-bottom: 14px solid #65378f;
+    width: 100px;
+    height: 100px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+}
+
+#snackbar {
+    visibility: hidden;
+    left: 0%;
+    right: 0%;
+    width: 100%;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 2px;
+    padding: 16px 0px;
+    position: absolute;
+    z-index: 1;
+    bottom: 30px;
+    font-size: 17px;
+}
+
+#snackbar.show {
+  visibility: visible;
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@-webkit-keyframes fadein {
+  from {bottom: 0; opacity: 0;} 
+  to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadein {
+  from {bottom: 0; opacity: 0;}
+  to {bottom: 30px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+  from {bottom: 30px; opacity: 1;} 
+  to {bottom: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+  from {bottom: 30px; opacity: 1;}
+  to {bottom: 0; opacity: 0;}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Merchant Registration */
+#merchant_registration_container{
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+#merchant_registration_img{
+    width: 100%;
+    max-width: 230px;
+    padding-bottom: 20px;
+}
+
+#merchant_new_registration_h2{
+    padding: 8px 0px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: normal;
+    font-size: 23px;
+    background-color: #ff308f;
+    background-color: #b90055;
+    color: white;
+    text-shadow: 1px 1px black;
+}
+
+#merchant_registration_form{
+    padding: 0px 60px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+
+#merchant_submitinput{
+    width: 50%;
+    cursor: pointer;
+    min-width: 200px;
+    background-color: #9053c7;
+    color: white;
+    border: none;
+    font-size: 15px;
+}
+
+#merchant_submitinput:hover{
+    background-color: #65378f;
+}
+
+
+
+#agree_tc_paragraph{
+    font-size: 13px;
+    margin-bottom: 25px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Merchant Dashboard */
+
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Merchant DashBoard /dashboard.html */
+#merchant_dashboard{
+    
+}
+
+
+#header_of_merchant{
+    background-color: white;
+    border: 0.8px solid #adadad;
+}
+
+#left_header_merchant{
+    width: 30%;
+    box-sizing: border-box;
+/*    min-width: 270px;*/
+    float: left;
+}
+
+#left_header_merchant img{
+    width: 100%;
+    max-width: 270px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#right_header_merchant{
+    color: #464646;
+    width: 70%;
+    float: left;
+    margin-top: 22px;
+    margin-bottom: 22px;
+    font-size: 20px;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+}
+
+
+#merchant_mainmenu{
+    text-align: center;
+    box-sizing: border-box;
+    padding: 4px;
+}
+
+#merchant_mainmenu a{
+    color: #424242;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Registration Successful */
+#merchant_reg_success_container{
+    width: 100%;
+}
+
+#merchant_reg_success_container img{
+    margin-top: 10px;
+    width: 100%;
+    max-width: 260px;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+
+
+
+
+#merchant_reg_deatils{
+    font-family: 'Roboto', sans-serif;
+    text-align: left;
+}
+#merchant_reg_deatils h3{
+    padding: 10px 0px;
+    margin: 0;
+    margin-top: 10px;
+    text-align: center;
+    border-bottom: 0.8px solid #b7b7b7;
+    color: #484848;
+}
+
+#deatils_0f_mreg{
+    box-sizing: border-box;
+    padding: 15px;
+    line-height: 20px;
+    font-size: 15.5px;
+}
+
+#extra_info_merchant_reg{
+    box-sizing: border-box;
+    padding: 5px;
+    font-size: 13.5px;
+    color: #1b1b1b;
+}
+
+#registration_confirm_btn{
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 6px 20px;
+    cursor: pointer;
+    background-color: #7f49b1;
+    color: white;
+    outline: none;
+    font-size: 15px;
+    border-radius: 7px;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+
+#registration_confirm_btn:hover{
+    background-color: #65378f;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Media Queries */
+
+@media only screen and (max-width: 800px) {
+    #left_header_merchant{
+        width: 100%;
+        text-align: center;
+        border-bottom: 0.8px solid #adadad;
+    }
+    
+    #right_header_merchant{
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    
+    #merchant_login_container{
+        height: 100%;
+        top: 0;
+    }
+
+}
+
+
+@media only screen and (max-width: 500px) {
+    #merchant_registration_form{
+        padding: 0px 20px;
+    }
+    
+    #merchant_new_registration_h2{
+        font-size: 20px;
+    }
+    
+    #right_header_merchant{
+        margin-top: 10px;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+    
+}
+
+
+
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}
+
+
+
+
+/* KeyFrame */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

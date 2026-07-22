@@ -1,0 +1,22 @@
+# OS / editor cruft
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+
+# Large / churny upload directories (served directly from the live host,
+# not meant to live in git history)
+/productsimage/
+/extradetails/
+/extradetailsnotupload/
+/productsnotupload/
+
+# Leftover test upload sandbox containing unrelated personal files
+/merchant/test3/uploads/
+/merchant/test3/del/
+
+# Payment API secrets (real credentials — never commit)
+/api/secrets.php
+
+# Logs
+*.log
