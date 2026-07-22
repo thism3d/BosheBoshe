@@ -18,13 +18,18 @@ BosheBoshe.
 
 ## 1. Start a payment
 
-`POST https://bosheboshe.com/api/payment_proceed.php`
+`POST https://bosheboshe.com/payment_proceed`
+
+This is BosheBoshe's own URL — you post to bosheboshe.com directly, not to
+any gateway and not to an `/api/` path. (The legacy
+`/api/payment_proceed.php` URL still works as an alias, but prefer the
+clean one above.)
 
 The simplest integration is a plain HTML form — the customer's browser
-gets redirected straight through to the SSLCommerz payment page:
+gets redirected straight through to the payment page:
 
 ```html
-<form action="https://bosheboshe.com/api/payment_proceed.php" method="post">
+<form action="https://bosheboshe.com/payment_proceed" method="post">
   <input type="hidden" name="api_key" value="YOUR_API_KEY">
   <input type="hidden" name="amount" value="1250.00">
   <input type="hidden" name="currency" value="BDT">

@@ -22,19 +22,33 @@ confirmed.
 ## Architecture
 
 ```
-Partner site --POST--> api/payment_proceed.php --(provider)--> SSLCommerz
-                              |                                     |
-                       api_transactions row                 customer pays
-                              |                                     |
-Partner site <--302 (signed)-- /successpayment (native page + hook) <-- gateway
-                              |
-                      (also api/ipn.php, server-to-server, for reliability)
+Partner --POST--> /payment_proceed (root) --> /sslpayment (root) --(provider)--> gateway
+                        |                            |                              |
+                 api_transactions row        opens the session               customer pays
+                        |                                                          |
+Partner <--302 (signed)-- /successpayment (root native page + hook) <------------- gateway
+                        |
+                (also api/ipn.php, server-to-server, for reliability)
 ```
 
-All API code lives under `/api/`, kept separate from the site's own
-checkout (`payment_proceed.php` / `sslpayment.php` at the repo root — those
-power BosheBoshe's own cart checkout; the `payment_proceed.php` name
-collision is coincidental and the root file was left untouched).
+**Partner requests enter through BosheBoshe's own root URLs, never a
+visible `/api/` path.** The root `payment_proceed.php` and `sslpayment.php`
+each carry a tiny branch at the very top: if the request is a partner call
+(`payment_proceed.php` checks for an `api_key` in the POST; `sslpayment.php`
+checks for the aggregator context handed to it) it runs the aggregator via
+`api/lib/aggregator_entry.php` and stops; otherwise the file's existing
+native-checkout code runs unchanged. So a partner payment travels through
+the same three root pages as a native order at every hop — entry
+(`/payment_proceed`), gateway session (`/sslpayment`), and callbacks
+(`/successpayment` etc.).
+
+The `/api/` directory still holds all the engine code (libs, providers,
+handlers) and the utility endpoints (ipn, transaction_query, refunds).
+`api/payment_proceed.php` remains only as a backward-compatible alias that
+calls the same `aggregator_initiate()` — new integrations should use the
+root URL. The native cart checkout (`payment_proceed.php` /
+`sslpayment.php` at the repo root) is otherwise untouched; the branches are
+additive and fall through for any non-partner request.
 
 ### Provider abstraction (`api/providers/`)
 
@@ -125,7 +139,7 @@ is standard `application/x-www-form-urlencoded` (a plain HTML form works).
 
 | Endpoint | Auth | Purpose |
 |---|---|---|
-| `payment_proceed.php` | `api_key` | Open a gateway session, redirect the browser to it (or return JSON with `response_type=json`). Selects the gateway via the optional `provider` field |
+| **`/payment_proceed`** (root) → `/sslpayment` (root) | `api_key` | Partner entry. Validates + records the transaction, opens the gateway session, redirects the browser (or returns JSON with `response_type=json`). Selects the gateway via the optional `provider` field. `/api/payment_proceed.php` is a kept-alive alias |
 | `/successpayment`, `/failedpayment`, `/cancelpayment` (native pages + hook) | none (gateway calls these) | Verify via the provider, update the transaction, 302 back to the partner's own URL with a signed payload. Native store orders fall through to normal handling |
 | `ipn.php` | none (gateway server-to-server) | Backup confirmation path in case the browser never returns; also relays to the partner's `ipn_url` if they registered one |
 | `transaction_query.php` | `api_key` | Partner "enquiry" — look up one of their transactions by `tran_id` or `order_ref`; `live=1` also re-checks the gateway directly |

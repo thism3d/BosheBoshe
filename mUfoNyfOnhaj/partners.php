@@ -70,7 +70,7 @@ require __DIR__ . '/inc/layout_top.php';
     </form>
     <details>
       <summary style="cursor:pointer; color:var(--accent); font-size:13px;">Show integration snippet</summary>
-      <pre style="background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:14px; overflow-x:auto; font-size:12px; margin-top:10px; line-height:1.55;"><code>&lt;form action="https://bosheboshe.com/api/payment_proceed.php" method="post"&gt;
+      <pre style="background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:14px; overflow-x:auto; font-size:12px; margin-top:10px; line-height:1.55;"><code>&lt;form action="https://bosheboshe.com/payment_proceed" method="post"&gt;
   &lt;input type="hidden" name="api_key" value="<?= htmlspecialchars($p['api_key']) ?>"&gt;
   &lt;input type="hidden" name="amount" value="1250.00"&gt;
   &lt;input type="hidden" name="currency" value="BDT"&gt;  &lt;!-- BDT,USD,EUR,GBP,AUD,CAD,SGD,INR,MYR --&gt;

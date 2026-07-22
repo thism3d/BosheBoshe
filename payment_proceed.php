@@ -1,3 +1,13 @@
+<?php
+// Aggregator entry: a partner/API request (carries an api_key) is handled by
+// the payment aggregator and never reaches the native checkout below. A
+// normal BosheBoshe cart checkout carries no api_key and falls straight
+// through, running the existing code unchanged.
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['api_key'])) {
+    require_once __DIR__ . '/api/lib/aggregator_entry.php';
+    aggregator_initiate();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
       <head>

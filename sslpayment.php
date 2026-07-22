@@ -1,6 +1,17 @@
 <?php
 
 
+// Aggregator hand-off: when reached from the payment aggregator (via root
+// payment_proceed.php), open the gateway session here and stop — so a partner
+// payment's gateway request originates from this same native SSLCommerz page
+// as a normal BosheBoshe checkout. Native checkout requests set no such
+// context and fall through to the existing code below, unchanged.
+if (!empty($GLOBALS['aggregator_txn'])) {
+    require_once __DIR__ . '/api/lib/aggregator_entry.php';
+    aggregator_run_session($GLOBALS['aggregator_txn']);
+}
+
+
 // if you have order id generated catch the order_id key and query in your database. otherwise pass json data to postdata key of button to catch here
 
 
