@@ -3,6 +3,7 @@
 **/.DS_Store
 .idea/
 .vscode/
+/docs/ADMIN_CREDENTIALS.md
 
 # Large / churny upload directories (served directly from the live host,
 # not meant to live in git history)

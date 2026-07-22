@@ -24,3 +24,20 @@ function api_db_connect(): mysqli
 
     return $conn;
 }
+
+/**
+ * Fail-open variant: returns null instead of emitting a response and
+ * exiting when the DB is unreachable. Used by the native callback hook,
+ * which must never break the native store pages if the aggregator's DB is
+ * momentarily down — it just falls through to normal native handling.
+ */
+function api_db_try_connect(): ?mysqli
+{
+    mysqli_report(MYSQLI_REPORT_OFF);
+    $conn = @new mysqli('localhost', 'bosheboshe_udtxasd', '@RGYhjfasdtU1245', 'bosheboshe_userdatabase');
+    if ($conn->connect_error) {
+        return null;
+    }
+    $conn->set_charset('utf8mb4');
+    return $conn;
+}

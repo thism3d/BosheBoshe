@@ -8,6 +8,7 @@ require_once __DIR__ . '/../inc/csrf.php';
 require_once __DIR__ . '/../inc/flash.php';
 require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../../api/lib/functions.php';
+require_once __DIR__ . '/../../api/providers/factory.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
     flash_set('error', 'Invalid request.');
@@ -30,19 +31,20 @@ if (!$txn) {
     exit;
 }
 
-$url = SSLCZ_TRANS_API . '?' . http_build_query([
-    'tran_id' => $txn['tran_id'],
-    'store_id' => SSLCOMMERZ_STORE_ID,
-    'store_passwd' => SSLCOMMERZ_STORE_PASSWD,
-    'format' => 'json',
-]);
-$result = api_curl_get($url);
+$provider = payment_provider($txn['provider']);
 $conn->close();
 
-if (!$result['ok']) {
-    flash_set('error', 'Could not reach SSLCommerz.');
+if (!$provider) {
+    flash_set('error', 'Provider not available for this transaction.');
+    header('Location: ../transactions.php');
+    exit;
+}
+
+$data = $provider->queryTransaction($txn['tran_id'])['raw'];
+if ($data === null) {
+    flash_set('error', 'Could not reach the gateway.');
 } else {
-    $gwStatus = $result['data'][0]['status'] ?? ($result['data']['status'] ?? 'unknown');
+    $gwStatus = $data[0]['status'] ?? ($data['status'] ?? 'unknown');
     flash_set('ok', "Live gateway status for {$txn['tran_id']}: $gwStatus");
 }
 

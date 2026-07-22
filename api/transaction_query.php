@@ -9,6 +9,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/functions.php';
+require_once __DIR__ . '/providers/factory.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     api_json_response(405, ['status' => 'error', 'message' => 'Use POST']);
@@ -49,14 +50,10 @@ if (!$txn) {
 
 $liveCheck = null;
 if (($_POST['live'] ?? '') === '1') {
-    $url = SSLCZ_TRANS_API . '?' . http_build_query([
-        'tran_id' => $txn['tran_id'],
-        'store_id' => SSLCOMMERZ_STORE_ID,
-        'store_passwd' => SSLCOMMERZ_STORE_PASSWD,
-        'format' => 'json',
-    ]);
-    $result = api_curl_get($url);
-    $liveCheck = $result['data'];
+    $provider = payment_provider($txn['provider']);
+    if ($provider) {
+        $liveCheck = $provider->queryTransaction($txn['tran_id'])['raw'];
+    }
 }
 
 $conn->close();
@@ -65,9 +62,11 @@ api_json_response(200, [
     'status' => 'success',
     'transaction' => [
         'tran_id' => $txn['tran_id'],
+        'provider' => $txn['provider'],
         'order_ref' => $txn['partner_order_ref'],
         'amount' => $txn['amount'],
         'currency' => $txn['currency'],
+        'base_amount_bdt' => $txn['base_amount_bdt'],
         'status' => $txn['status'],
         'val_id' => $txn['val_id'],
         'bank_tran_id' => $txn['bank_tran_id'],

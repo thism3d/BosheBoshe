@@ -1,18 +1,23 @@
 <?php
 /**
- * Shared logic for the three SSLCommerz callback targets
- * (payment_success.php / payment_fail.php / payment_cancel.php).
+ * Shared logic for handling a gateway callback for an aggregator
+ * transaction, regardless of which gateway it came from.
  *
- * SSLCommerz POSTs here with our own tran_id in $_POST['value_a']
- * (mirrors the pattern already used by the store's own successpayment.php).
- * We update the local api_transactions row, then 302-redirect the browser
- * back to the partner's original success/fail/cancel URL with a signed
- * result payload so the partner can trust the data without calling us
- * again.
+ * Reached two ways, both landing here with the gateway's POST data:
+ *   1. via the native store pages (successpayment/failedpayment/cancelpayment),
+ *      which carry native_callback_hook.php and hand off when the posted
+ *      tran_id belongs to an api_transactions row; OR
+ *   2. via the thin api/payment_success.php etc. entry points (direct hits).
+ *
+ * We look up the transaction, ask its provider to verify the result,
+ * update the local row, then 302-redirect the customer's browser back to
+ * the partner's own success/fail/cancel URL with an HMAC-signed payload so
+ * the partner can trust the data without calling us back.
  */
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/../providers/factory.php';
 
 /**
  * @param string $event one of 'success', 'fail', 'cancel'
@@ -45,32 +50,21 @@ function api_handle_callback(string $event): void
     }
 
     $status = 'FAILED';
-    $valId = null;
+    $valId = $_POST['val_id'] ?? null;
     $bankTranId = null;
     $cardType = null;
+    $baseAmountBdt = null;
     $rawResponse = null;
 
     if ($event === 'success') {
-        $valId = $_POST['val_id'] ?? '';
-        if ($valId !== '') {
-            $url = SSLCZ_VALIDATION_API . '?' . http_build_query([
-                'val_id' => $valId,
-                'store_id' => SSLCOMMERZ_STORE_ID,
-                'store_passwd' => SSLCOMMERZ_STORE_PASSWD,
-                'v' => 1,
-                'format' => 'json',
-            ]);
-            $result = api_curl_get($url);
-            $rawResponse = json_encode($result['data']);
-
-            $validationStatus = $result['data']['status'] ?? '';
-            if (in_array($validationStatus, ['VALID', 'VALIDATED'], true)) {
-                $status = 'VALID';
-                $bankTranId = $result['data']['bank_tran_id'] ?? null;
-                $cardType = $result['data']['card_type'] ?? null;
-            } else {
-                $status = 'VALIDATION_FAILED';
-            }
+        $provider = payment_provider($txn['provider']);
+        if ($provider) {
+            $verified = $provider->validateCallback($_POST);
+            $status = $verified['status'];
+            $bankTranId = $verified['bank_tran_id'];
+            $cardType = $verified['card_type'];
+            $baseAmountBdt = $verified['base_amount_bdt'];
+            $rawResponse = json_encode($verified['raw']);
         } else {
             $status = 'VALIDATION_FAILED';
         }
@@ -88,9 +82,9 @@ function api_handle_callback(string $event): void
     }
 
     $update = $conn->prepare('UPDATE api_transactions
-        SET status = ?, val_id = ?, bank_tran_id = ?, card_type = ?, raw_response = ?, commission_amount = ?
+        SET status = ?, val_id = ?, bank_tran_id = ?, card_type = ?, base_amount_bdt = ?, raw_response = ?, commission_amount = ?
         WHERE tran_id = ?');
-    $update->bind_param('sssssds', $status, $valId, $bankTranId, $cardType, $rawResponse, $commissionAmount, $tranId);
+    $update->bind_param('ssssdsds', $status, $valId, $bankTranId, $cardType, $baseAmountBdt, $rawResponse, $commissionAmount, $tranId);
     $update->execute();
     $update->close();
     $conn->close();

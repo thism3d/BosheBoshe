@@ -10,6 +10,7 @@ require_once __DIR__ . '/../inc/csrf.php';
 require_once __DIR__ . '/../inc/flash.php';
 require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../../api/lib/functions.php';
+require_once __DIR__ . '/../../api/providers/factory.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
     flash_set('error', 'Invalid request.');
@@ -39,28 +40,26 @@ if ($refundAmount <= 0 || $refundAmount > (float) $txn['amount'] || $refundRemar
     exit;
 }
 
+$provider = payment_provider($txn['provider']);
+if (!$provider) {
+    flash_set('error', 'Provider not available for this transaction.');
+    header('Location: ../transactions.php');
+    exit;
+}
+
 $refundTransId = 'RFND-' . strtoupper(bin2hex(random_bytes(8)));
 
 $insert = $conn->prepare('INSERT INTO api_refunds
-    (transaction_id, refund_trans_id, bank_tran_id, refund_amount, refund_remarks, status)
-    VALUES (?, ?, ?, ?, ?, "INITIATED")');
-$insert->bind_param('issds', $txn['id'], $refundTransId, $txn['bank_tran_id'], $refundAmount, $refundRemarks);
+    (transaction_id, provider, refund_trans_id, bank_tran_id, refund_amount, refund_remarks, status)
+    VALUES (?, ?, ?, ?, ?, ?, "INITIATED")');
+$insert->bind_param('isssds', $txn['id'], $txn['provider'], $refundTransId, $txn['bank_tran_id'], $refundAmount, $refundRemarks);
 $insert->execute();
 $insert->close();
 
-$url = SSLCZ_TRANS_API . '?' . http_build_query([
-    'bank_tran_id' => $txn['bank_tran_id'],
-    'refund_trans_id' => $refundTransId,
-    'refund_amount' => $refundAmount,
-    'refund_remarks' => $refundRemarks,
-    'store_id' => SSLCOMMERZ_STORE_ID,
-    'store_passwd' => SSLCOMMERZ_STORE_PASSWD,
-    'format' => 'json',
-]);
-$result = api_curl_get($url);
-$data = $result['data'] ?? [];
-$status = $data['status'] ?? 'unknown';
-$refundRefId = $data['refund_ref_id'] ?? null;
+$refund = $provider->initiateRefund($txn['bank_tran_id'], $refundTransId, $refundAmount, $refundRemarks);
+$data = $refund['raw'];
+$status = $refund['status'];
+$refundRefId = $refund['refund_ref_id'];
 
 $update = $conn->prepare('UPDATE api_refunds SET status = ?, refund_ref_id = ?, raw_response = ? WHERE refund_trans_id = ?');
 $rawJson = json_encode($data);

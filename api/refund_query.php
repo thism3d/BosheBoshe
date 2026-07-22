@@ -10,6 +10,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/functions.php';
+require_once __DIR__ . '/providers/factory.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     api_json_response(405, ['status' => 'error', 'message' => 'Use POST']);
@@ -47,15 +48,14 @@ if (empty($refund['refund_ref_id'])) {
     api_json_response(409, ['status' => 'error', 'message' => 'Refund was never successfully initiated at the gateway']);
 }
 
-$url = SSLCZ_TRANS_API . '?' . http_build_query([
-    'refund_ref_id' => $refund['refund_ref_id'],
-    'store_id' => SSLCOMMERZ_STORE_ID,
-    'store_passwd' => SSLCOMMERZ_STORE_PASSWD,
-    'format' => 'json',
-]);
-$result = api_curl_get($url);
-$data = $result['data'] ?? [];
-$status = $data['status'] ?? $refund['status'];
+$provider = payment_provider($refund['provider']);
+if (!$provider) {
+    api_json_response(500, ['status' => 'error', 'message' => 'Provider not available']);
+}
+
+$queried = $provider->queryRefund($refund['refund_ref_id']);
+$data = $queried['raw'];
+$status = $queried['status'] ?: $refund['status'];
 
 $update = $conn->prepare('UPDATE api_refunds SET status = ?, raw_response = ? WHERE refund_trans_id = ?');
 $rawJson = json_encode($data);

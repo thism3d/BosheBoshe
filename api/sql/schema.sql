@@ -20,9 +20,11 @@ CREATE TABLE IF NOT EXISTS api_partners (
 CREATE TABLE IF NOT EXISTS api_transactions (
     id INT NOT NULL AUTO_INCREMENT,
     partner_id INT NOT NULL,
+    provider VARCHAR(30) NOT NULL DEFAULT 'sslcommerz',
     tran_id VARCHAR(100) NOT NULL,
     partner_order_ref VARCHAR(150) DEFAULT NULL,
     amount DECIMAL(12,2) NOT NULL,
+    base_amount_bdt DECIMAL(12,2) DEFAULT NULL,
     currency VARCHAR(10) NOT NULL DEFAULT 'BDT',
     status VARCHAR(30) NOT NULL DEFAULT 'INITIATED',
     val_id VARCHAR(120) DEFAULT NULL,
@@ -33,6 +35,7 @@ CREATE TABLE IF NOT EXISTS api_transactions (
     customer_phone VARCHAR(30) DEFAULT NULL,
     customer_address VARCHAR(255) DEFAULT NULL,
     customer_city VARCHAR(100) DEFAULT NULL,
+    customer_country VARCHAR(100) DEFAULT NULL,
     partner_success_url TEXT DEFAULT NULL,
     partner_fail_url TEXT DEFAULT NULL,
     partner_cancel_url TEXT DEFAULT NULL,
@@ -46,12 +49,14 @@ CREATE TABLE IF NOT EXISTS api_transactions (
     UNIQUE KEY uniq_tran_id (tran_id),
     KEY idx_partner_id (partner_id),
     KEY idx_status (status),
+    KEY idx_provider (provider),
     CONSTRAINT fk_api_transactions_partner FOREIGN KEY (partner_id) REFERENCES api_partners(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS api_refunds (
     id INT NOT NULL AUTO_INCREMENT,
     transaction_id INT NOT NULL,
+    provider VARCHAR(30) NOT NULL DEFAULT 'sslcommerz',
     refund_trans_id VARCHAR(100) NOT NULL,
     refund_ref_id VARCHAR(120) DEFAULT NULL,
     bank_tran_id VARCHAR(120) NOT NULL,

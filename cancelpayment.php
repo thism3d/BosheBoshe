@@ -1,3 +1,10 @@
+<?php
+// Aggregator bridge: if this callback is for a partner-brokered payment,
+// hand off to the API handler (which redirects the partner) and stop here.
+// Native store payments fall straight through, untouched.
+require_once __DIR__ . '/api/lib/native_callback_hook.php';
+aggregator_maybe_handle('cancel');
+?>
 <!DOCTYPE html>
 <html>
       <head>

@@ -1,15 +1,20 @@
 # BosheBoshe Payment API — Integration Guide
 
-Accept payments (cards, mobile banking, EMI) through BosheBoshe's
-SSLCommerz merchant account without needing your own SSLCommerz
-contract. BosheBoshe settles with SSLCommerz directly and takes a small
-commission on each successful payment.
+Accept payments (cards, mobile banking, EMI, international cards) through
+BosheBoshe's payment aggregator without needing your own gateway contract.
+BosheBoshe is the merchant of record, settles with the underlying gateway,
+and takes a small commission on each successful payment.
 
 Base URL: `https://bosheboshe.com/api/`
 
 You'll receive an **`api_key`** and (for refunds only) an **`api_secret`**
 from BosheBoshe. Keep `api_secret` server-side only — never expose it in
 frontend code.
+
+Everything below is provider-agnostic: today payments route to SSLCommerz,
+and BosheBoshe may add more gateways later — your integration doesn't
+change. You never talk to the gateway directly; you only ever talk to
+BosheBoshe.
 
 ## 1. Start a payment
 
@@ -43,26 +48,28 @@ gets redirected straight through to the SSLCommerz payment page:
 |---|---|---|
 | `api_key` | yes | Given to you by BosheBoshe |
 | `amount` | yes | Numeric, e.g. `1250.00` |
-| `currency` | no | **`BDT` only** — this account isn't provisioned for other currencies yet, so anything else is rejected with a `400`. Omit it or send `BDT` explicitly |
+| `currency` | no | One of `BDT, USD, EUR, GBP, AUD, CAD, SGD, INR, MYR` (default `BDT`). Non-BDT charges are converted to BDT by the gateway at the current rate. Anything outside this list is rejected with `400` |
 | `order_ref` | no | Your own order/invoice ID — echoed back to you on every callback and query |
-| `cus_name`, `cus_email`, `cus_phone`, `cus_add1`, `cus_city` | yes | Customer details required by SSLCommerz |
+| `cus_name`, `cus_email`, `cus_phone`, `cus_add1`, `cus_city` | yes | Customer details |
+| `cus_country` | no | Customer's country (default `Bangladesh`). Set the real country for international card payments |
 | `success_url`, `fail_url`, `cancel_url` | yes | **Your own pages.** BosheBoshe redirects the customer's browser here once the payment finishes — see §2 |
 | `ipn_url` | no | Your server-to-server webhook — see §3 |
 | `emi_option` | no | `1` to allow EMI (BosheBoshe's merchant account has EMI enabled), default `0` |
-| `response_type` | no | Omit for the redirect flow above. Set to `json` if you're calling this from your own backend instead of a browser form — you'll get back `{"status":"success","tran_id":"...","GatewayPageURL":"..."}` and should redirect your customer to `GatewayPageURL` yourself |
+| `provider` | no | Which gateway to route to (default `sslcommerz`). Only pass this if BosheBoshe tells you to |
+| `response_type` | no | Omit for the redirect flow above. Set to `json` if you're calling this from your own backend instead of a browser form — you'll get back `{"status":"success","tran_id":"...","redirect_url":"..."}` and should redirect your customer to `redirect_url` yourself |
 
 On validation failure you get back `400`/`401`/`502` with
 `{"status":"error","message":"..."}`.
 
-**Note on what SSLCommerz actually sees:** BosheBoshe is the merchant of
-record on every transaction, so the session request sent to SSLCommerz is
-always shaped exactly like BosheBoshe's own native checkout — same
-"bosheboshe" shipping identity, same field set, same `BOSHEBOSHE_TRID_...`
-transaction ID style. Your site name, `order_ref`, and any product details
-are never sent to SSLCommerz; they only exist in BosheBoshe's own records,
-keyed by `tran_id`. There's no `product_category`/`product_name`/
-`cus_postcode` field on this endpoint — BosheBoshe doesn't forward those to
-SSLCommerz, so passing them has no effect.
+**Note on what the gateway sees:** BosheBoshe is the merchant of record on
+every transaction. The gateway session is shaped to look like BosheBoshe's
+own native checkout — a fixed "bosheboshe" shipping identity, a
+`BOSHEBOSHE_TRID_...` transaction ID, and no partner metadata — so the
+gateway can't tell which website a payment originated from. Your site name,
+`order_ref`, and product details are never sent to the gateway; they live
+only in BosheBoshe's records, keyed by `tran_id`. (Customer-level fields
+like `currency` and `cus_country` do reach the gateway, since they describe
+the buyer and the charge, not the originating site.)
 
 ## 2. Getting the result back
 

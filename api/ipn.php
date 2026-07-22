@@ -1,26 +1,25 @@
 <?php
 /**
- * SSLCommerz IPN (Instant Payment Notification) listener — server-to-server,
+ * Gateway IPN (Instant Payment Notification) listener — server-to-server,
  * more reliable than relying on the customer's browser reaching the
- * success/fail/cancel redirect. Configured via ipn_url in the Session API
- * call (see api/payment_proceed.php).
+ * callback page. Registered via ipn_url in the session (see config.php).
  *
- * We re-validate independently (never trust IPN data on its own, per the
- * SSLCommerz docs) and update the transaction if it isn't already VALID.
- * Then, best-effort, we forward the result to the partner's own ipn_url
- * if they registered one.
+ * We re-verify independently through the transaction's provider (never
+ * trust IPN data on its own) and update the transaction if it isn't
+ * already VALID. Then, best-effort, we forward the result to the partner's
+ * own ipn_url if they registered one.
  */
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/functions.php';
+require_once __DIR__ . '/providers/factory.php';
 
 header('Content-Type: application/json');
 
 $tranId = $_POST['value_a'] ?? $_POST['tran_id'] ?? '';
-$valId = $_POST['val_id'] ?? '';
 
-if ($tranId === '' || $valId === '') {
-    api_json_response(400, ['status' => 'error', 'message' => 'Missing tran_id/val_id']);
+if ($tranId === '') {
+    api_json_response(400, ['status' => 'error', 'message' => 'Missing tran_id']);
 }
 
 $conn = api_db_connect();
@@ -42,20 +41,18 @@ if ($txn['status'] === 'VALID') {
     api_json_response(200, ['status' => 'ok', 'message' => 'Already processed']);
 }
 
-$url = SSLCZ_VALIDATION_API . '?' . http_build_query([
-    'val_id' => $valId,
-    'store_id' => SSLCOMMERZ_STORE_ID,
-    'store_passwd' => SSLCOMMERZ_STORE_PASSWD,
-    'v' => 1,
-    'format' => 'json',
-]);
-$result = api_curl_get($url);
-$validationStatus = $result['data']['status'] ?? '';
+$provider = payment_provider($txn['provider']);
+if (!$provider) {
+    api_json_response(500, ['status' => 'error', 'message' => 'Provider not available']);
+}
 
-$status = in_array($validationStatus, ['VALID', 'VALIDATED'], true) ? 'VALID' : 'VALIDATION_FAILED';
-$bankTranId = $result['data']['bank_tran_id'] ?? null;
-$cardType = $result['data']['card_type'] ?? null;
-$rawResponse = json_encode($result['data']);
+$verified = $provider->validateCallback($_POST);
+$status = $verified['status'];
+$valId = $_POST['val_id'] ?? null;
+$bankTranId = $verified['bank_tran_id'];
+$cardType = $verified['card_type'];
+$baseAmountBdt = $verified['base_amount_bdt'];
+$rawResponse = json_encode($verified['raw']);
 
 $commissionAmount = null;
 if ($status === 'VALID') {
@@ -68,9 +65,9 @@ if ($status === 'VALID') {
 }
 
 $update = $conn->prepare('UPDATE api_transactions
-    SET status = ?, val_id = ?, bank_tran_id = ?, card_type = ?, raw_response = ?, commission_amount = ?
+    SET status = ?, val_id = ?, bank_tran_id = ?, card_type = ?, base_amount_bdt = ?, raw_response = ?, commission_amount = ?
     WHERE tran_id = ?');
-$update->bind_param('sssssds', $status, $valId, $bankTranId, $cardType, $rawResponse, $commissionAmount, $tranId);
+$update->bind_param('ssssdsds', $status, $valId, $bankTranId, $cardType, $baseAmountBdt, $rawResponse, $commissionAmount, $tranId);
 $update->execute();
 $update->close();
 $conn->close();
